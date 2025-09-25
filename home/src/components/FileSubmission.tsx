@@ -24,6 +24,7 @@ export function FileSubmission() {
     setFile(f);
     setCid('');
     setStatus('');
+    setName(f?.name || '');
   };
 
   const onUpload = async () => {
@@ -38,7 +39,7 @@ export function FileSubmission() {
     e.preventDefault();
     if (!instance || !address) return alert('Connect wallet');
     if (!file || !cid) return alert('Upload file to get CID');
-    if (!name.trim()) return alert('Enter a name');
+    if (!name.trim()) return alert('No file name');
     if (!CONTRACT_ADDRESS) return alert('Contract address not set');
 
     setIsSubmitting(true);
@@ -67,27 +68,39 @@ export function FileSubmission() {
     }
   };
 
+  const canSubmit = !isSubmitting && !!cid;
+  const missing: string[] = [];
+  if (!file) missing.push('file');
+  if (!cid) missing.push('CID');
+
   return (
     <div className="card">
       <form onSubmit={onSubmit}>
-        <div style={{ marginBottom: 12 }}>
-          <label>File name</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="myfile.pdf" />
-        </div>
+        {file && (
+          <div style={{ marginBottom: 12 }}>
+            <label>File name</label>
+            <div style={{ fontSize: 14 }}>{name}</div>
+          </div>
+        )}
         <div style={{ marginBottom: 12 }}>
           <label>Choose file</label>
           <input type="file" ref={fileInputRef} onChange={onSelectFile} />
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button type="button" onClick={onUpload} disabled={!file || zamaLoading}>
+          <button type="button" onClick={onUpload} disabled={!file}>
             Get CID
           </button>
-          <button type="submit" disabled={isSubmitting || !cid || !name}>
+          <button type="submit" disabled={!canSubmit}>
             Submit
           </button>
         </div>
         {cid && (
           <div style={{ marginTop: 8, fontSize: 12 }}>CID: {cid}</div>
+        )}
+        {!canSubmit && missing.length > 0 && (
+          <div style={{ marginTop: 8, fontSize: 12, color: '#a00' }}>
+            Missing: {missing.join(', ')}
+          </div>
         )}
         {status && (
           <div style={{ marginTop: 8, fontSize: 12 }}>{status}</div>

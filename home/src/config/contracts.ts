@@ -1,5 +1,5 @@
 // ZamaFile contract (Sepolia). Replace with deployed address after deploy.
-export const CONTRACT_ADDRESS = '';
+export const CONTRACT_ADDRESS = '0x62EF08334314d6a38086569bDA9af198aadC71Bb';
 
 // ABI generated from deployments/sepolia/ZamaFile.json (copy after deploy)
 export const CONTRACT_ABI = [
