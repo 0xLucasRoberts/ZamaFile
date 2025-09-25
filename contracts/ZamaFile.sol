@@ -1,138 +1,83 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import { FHE, eaddress, euint32, externalEaddress } from "@fhevm/solidity/lib/FHE.sol";
-import { SepoliaConfig } from "@fhevm/solidity/config/ZamaConfig.sol";
-import "./libraries/IPFSUtils.sol";
+import {FHE, eaddress, externalEaddress} from "@fhevm/solidity/lib/FHE.sol";
+import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 
+/// @title ZamaFile - Encrypted address storage for IPFS-hash mappings
+/// @notice Stores two encrypted addresses (derived from an IPFS hash) and a cleartext filename per user entry.
+/// @dev Uses FHEVM encrypted address type (eaddress) and validates external encrypted input via a single inputProof.
 contract ZamaFile is SepoliaConfig {
-    using IPFSUtils for bytes32;
-
-    struct EncryptedFile {
-        eaddress encryptedAddress1;
-        eaddress encryptedAddress2;
-        string fileName;
+    struct Record {
+        // Cleartext metadata
+        string name; // user-provided file name (not encrypted)
         uint256 timestamp;
-        bool exists;
+        // Encrypted payload (two addresses derived from IPFS hash)
+        eaddress addr1;
+        eaddress addr2;
     }
 
-    mapping(address => EncryptedFile[]) private userFiles;
-    mapping(address => euint32) private userFileCount;
+    /// @dev Per-user list of records
+    mapping(address => Record[]) private _records;
 
-    event FileStored(address indexed user, string fileName, uint256 timestamp);
-    event FileRemoved(address indexed user, uint256 index, uint256 timestamp);
+    /// @notice Emitted when a new record is submitted
+    event RecordSubmitted(address indexed user, uint256 indexed index, string name, uint256 timestamp);
 
-    constructor() {
-        // Initialize empty file counts for users
-    }
-
-    function storeFile(
-        externalEaddress encryptedAddr1,
-        externalEaddress encryptedAddr2,
-        string calldata fileName,
+    /// @notice Submit a new record with two encrypted addresses
+    /// @param _name Plaintext file name (not encrypted)
+    /// @param _addr1 Encrypted address part 1 (external handle)
+    /// @param _addr2 Encrypted address part 2 (external handle)
+    /// @param inputProof Input proof returned by the relayer SDK encrypt() call
+    function submitRecord(
+        string calldata _name,
+        externalEaddress _addr1,
+        externalEaddress _addr2,
         bytes calldata inputProof
     ) external {
-        require(bytes(fileName).length > 0, "File name cannot be empty");
-        require(bytes(fileName).length <= 256, "File name too long");
+        // Validate external encrypted inputs
+        eaddress a1 = FHE.fromExternal(_addr1, inputProof);
+        eaddress a2 = FHE.fromExternal(_addr2, inputProof);
 
-        eaddress addr1 = FHE.fromExternal(encryptedAddr1, inputProof);
-        eaddress addr2 = FHE.fromExternal(encryptedAddr2, inputProof);
+        // Update ACL so the contract and caller can re-use and user-decrypt the values
+        FHE.allowThis(a1);
+        FHE.allowThis(a2);
+        FHE.allow(a1, msg.sender);
+        FHE.allow(a2, msg.sender);
 
-        EncryptedFile memory newFile = EncryptedFile({
-            encryptedAddress1: addr1,
-            encryptedAddress2: addr2,
-            fileName: fileName,
+        Record memory rec = Record({
+            name: _name,
             timestamp: block.timestamp,
-            exists: true
+            addr1: a1,
+            addr2: a2
         });
+        _records[msg.sender].push(rec);
 
-        userFiles[msg.sender].push(newFile);
-        userFileCount[msg.sender] = FHE.add(userFileCount[msg.sender], 1);
-
-        FHE.allowThis(addr1);
-        FHE.allow(addr1, msg.sender);
-        FHE.allowThis(addr2);
-        FHE.allow(addr2, msg.sender);
-        FHE.allowThis(userFileCount[msg.sender]);
-        FHE.allow(userFileCount[msg.sender], msg.sender);
-
-        emit FileStored(msg.sender, fileName, block.timestamp);
+        emit RecordSubmitted(msg.sender, _records[msg.sender].length - 1, _name, block.timestamp);
     }
 
-    function getUserFileCount() external view returns (euint32) {
-        return userFileCount[msg.sender];
+    /// @notice Returns the number of records stored by a user
+    function getRecordCount(address user) external view returns (uint256) {
+        return _records[user].length;
     }
 
-    function getFile(uint256 index) external view returns (
-        eaddress encryptedAddress1,
-        eaddress encryptedAddress2,
-        string memory fileName,
-        uint256 timestamp,
-        bool exists
-    ) {
-        require(index < userFiles[msg.sender].length, "File index out of bounds");
-        
-        EncryptedFile storage file = userFiles[msg.sender][index];
-        require(file.exists, "File does not exist");
-
-        return (
-            file.encryptedAddress1,
-            file.encryptedAddress2,
-            file.fileName,
-            file.timestamp,
-            file.exists
-        );
+    /// @notice Returns a single record by index
+    /// @dev Encrypted types are returned as ciphertext handles (bytes32 in ABI)
+    function getRecord(
+        address user,
+        uint256 index
+    ) external view returns (string memory name, uint256 timestamp, eaddress addr1, eaddress addr2) {
+        require(index < _records[user].length, "Index out of bounds");
+        Record storage r = _records[user][index];
+        return (r.name, r.timestamp, r.addr1, r.addr2);
     }
 
-    function getAllUserFiles() external view returns (
-        string[] memory fileNames,
-        uint256[] memory timestamps
-    ) {
-        uint256 length = userFiles[msg.sender].length;
-        uint256 existingCount = 0;
-
-        for (uint256 i = 0; i < length; i++) {
-            if (userFiles[msg.sender][i].exists) {
-                existingCount++;
-            }
+    /// @notice Convenience view to fetch all record names for a user
+    function getRecordNames(address user) external view returns (string[] memory) {
+        uint256 n = _records[user].length;
+        string[] memory names = new string[](n);
+        for (uint256 i = 0; i < n; i++) {
+            names[i] = _records[user][i].name;
         }
-
-        fileNames = new string[](existingCount);
-        timestamps = new uint256[](existingCount);
-
-        uint256 currentIndex = 0;
-        for (uint256 i = 0; i < length; i++) {
-            if (userFiles[msg.sender][i].exists) {
-                fileNames[currentIndex] = userFiles[msg.sender][i].fileName;
-                timestamps[currentIndex] = userFiles[msg.sender][i].timestamp;
-                currentIndex++;
-            }
-        }
-    }
-
-    function removeFile(uint256 index) external {
-        require(index < userFiles[msg.sender].length, "File index out of bounds");
-        require(userFiles[msg.sender][index].exists, "File does not exist");
-
-        userFiles[msg.sender][index].exists = false;
-        userFileCount[msg.sender] = FHE.sub(userFileCount[msg.sender], 1);
-
-        FHE.allowThis(userFileCount[msg.sender]);
-        FHE.allow(userFileCount[msg.sender], msg.sender);
-
-        emit FileRemoved(msg.sender, index, block.timestamp);
-    }
-
-    function updateFileName(uint256 index, string calldata newFileName) external {
-        require(index < userFiles[msg.sender].length, "File index out of bounds");
-        require(userFiles[msg.sender][index].exists, "File does not exist");
-        require(bytes(newFileName).length > 0, "File name cannot be empty");
-        require(bytes(newFileName).length <= 256, "File name too long");
-
-        userFiles[msg.sender][index].fileName = newFileName;
-    }
-
-    function getTotalUserFiles() external view returns (uint256) {
-        return userFiles[msg.sender].length;
+        return names;
     }
 }
