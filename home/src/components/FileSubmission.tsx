@@ -9,7 +9,7 @@ import '../styles/FileApp.css';
 
 export function FileSubmission() {
   const { address } = useAccount();
-  const { instance, isLoading: zamaLoading, error } = useZamaInstance();
+  const { instance, error } = useZamaInstance();
   const signerPromise = useEthersSigner();
 
   const [name, setName] = useState('');
@@ -29,16 +29,16 @@ export function FileSubmission() {
 
   const onUpload = async () => {
     if (!file) return alert('Select a file first');
-    setStatus('Calculating CID...');
+    setStatus('Calculating HASH...');
     const cid = await mockIPFSUpload(file);
     setCid(cid);
-    setStatus('CID ready');
+    setStatus('HASH ready');
   };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!instance || !address) return alert('Connect wallet');
-    if (!file || !cid) return alert('Upload file to get CID');
+    if (!file || !cid) return alert('Upload file to Upload IPFS');
     if (!name.trim()) return alert('No file name');
     if (!CONTRACT_ADDRESS) return alert('Contract address not set');
 
@@ -74,38 +74,69 @@ export function FileSubmission() {
   if (!cid) missing.push('CID');
 
   return (
-    <div className="card">
+    <div className="card hover-glow">
       <form onSubmit={onSubmit}>
         {file && (
-          <div style={{ marginBottom: 12 }}>
-            <label>File name</label>
-            <div style={{ fontSize: 14 }}>{name}</div>
+          <div style={{ marginBottom: 'var(--spacing-md)' }}>
+            <label>📝 File name</label>
+            <div style={{
+              fontSize: '1.1rem',
+              color: 'var(--text-inverse)',
+              fontWeight: '600',
+              background: 'rgba(255, 255, 255, 0.1)',
+              padding: 'var(--spacing-sm)',
+              borderRadius: 'var(--radius-md)',
+              marginTop: 'var(--spacing-xs)'
+            }}>{name}</div>
           </div>
         )}
-        <div style={{ marginBottom: 12 }}>
-          <label>Choose file</label>
+        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+          <label>📎 Choose file</label>
           <input type="file" ref={fileInputRef} onChange={onSelectFile} />
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 'var(--spacing-md)', flexWrap: 'wrap' }}>
           <button type="button" onClick={onUpload} disabled={!file}>
-            Get CID
+            {!file ? '⏳ Upload IPFS' : '🔄 Upload IPFS'}
           </button>
           <button type="submit" disabled={!canSubmit}>
-            Submit
+            {isSubmitting ? '⏳ Submitting...' : '🚀 Submit to Blockchain'}
           </button>
         </div>
         {cid && (
-          <div style={{ marginTop: 8, fontSize: 12 }}>CID: {cid}</div>
+          <div style={{ marginTop: 'var(--spacing-lg)', fontSize: '0.875rem' }}>
+            🔗 <strong>Hash:</strong> {cid}
+          </div>
         )}
         {!canSubmit && missing.length > 0 && (
-          <div style={{ marginTop: 8, fontSize: 12, color: '#a00' }}>
-            Missing: {missing.join(', ')}
+          <div style={{ marginTop: 'var(--spacing-md)', fontSize: '0.875rem', color: '#ff6b6b' }}>
+            ⚠️ <strong>Missing:</strong> {missing.join(', ')}
           </div>
         )}
         {status && (
-          <div style={{ marginTop: 8, fontSize: 12 }}>{status}</div>
+          <div style={{
+            marginTop: 'var(--spacing-md)',
+            fontSize: '0.875rem',
+            background: status.includes('Failed') ? 'rgba(255, 107, 107, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+            border: status.includes('Failed') ? '1px solid rgba(255, 107, 107, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
+            padding: 'var(--spacing-sm)',
+            borderRadius: 'var(--radius-sm)',
+            color: status.includes('Failed') ? '#ff6b6b' : '#10b981'
+          }}>
+            {status.includes('Failed') ? '❌' : status.includes('Submitted') ? '✅' : '🔄'} {status}
+          </div>
         )}
-        {error && <div style={{ color: 'red' }}>{error}</div>}
+        {error && (
+          <div style={{
+            color: '#ff6b6b',
+            marginTop: 'var(--spacing-md)',
+            background: 'rgba(255, 107, 107, 0.1)',
+            border: '1px solid rgba(255, 107, 107, 0.3)',
+            padding: 'var(--spacing-sm)',
+            borderRadius: 'var(--radius-sm)',
+          }}>
+            ❌ {error}
+          </div>
+        )}
       </form>
     </div>
   );

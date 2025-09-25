@@ -95,20 +95,95 @@ export function FileList() {
     setItems(updated);
   };
 
-  if (!address) return <div>Please connect wallet</div>;
-  if (loading) return <div>Loading...</div>;
+  if (!address) {
+    return (
+      <div className="connect-wallet-container">
+        <h2 className="connect-wallet-title">🔗 Connect Your Wallet</h2>
+        <p className="connect-wallet-description">
+          Please connect your wallet to view and manage your encrypted files
+        </p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="connect-wallet-container">
+        <h2 className="connect-wallet-title">🔄 Loading Files...</h2>
+        <p className="connect-wallet-description">
+          Fetching your encrypted files from the blockchain
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div>
-      {items.length === 0 && <div>No files yet</div>}
+      {items.length === 0 && (
+        <div className="connect-wallet-container">
+          <h2 className="connect-wallet-title">📁 No Files Yet</h2>
+          <p className="connect-wallet-description">
+            You haven't uploaded any files yet. Switch to the Submit File tab to get started!
+          </p>
+        </div>
+      )}
       {items.map((it, i) => (
-        <div key={i} className="card" style={{ textAlign: 'left' }}>
-          <div><strong>{it.name}</strong></div>
-          <div style={{ fontSize: 12, color: '#555' }}>Timestamp: {it.timestamp.toString()}</div>
+        <div key={i} className="card hover-glow" style={{ textAlign: 'left' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: 'var(--spacing-md)'
+          }}>
+            <div>
+              <div style={{
+                fontSize: '1.25rem',
+                fontWeight: '700',
+                color: 'var(--text-inverse)',
+                marginBottom: 'var(--spacing-xs)'
+              }}>
+                📄 <strong>{it.name}</strong>
+              </div>
+              <div style={{
+                fontSize: '0.875rem',
+                color: 'rgba(255, 255, 255, 0.7)',
+                fontFamily: 'Consolas, Monaco, Courier New, monospace'
+              }}>
+                ⏰ {new Date(Number(it.timestamp) * 1000).toLocaleString()}
+              </div>
+            </div>
+          </div>
+
           {it.cid ? (
-            <div style={{ marginTop: 8 }}>CID: {it.cid}</div>
+            <div style={{
+              marginTop: 'var(--spacing-md)',
+              padding: 'var(--spacing-md)',
+              background: 'rgba(16, 185, 129, 0.1)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              borderRadius: 'var(--radius-md)',
+              wordBreak: 'break-all'
+            }}>
+              <strong style={{ color: '#10b981' }}>🔗 IPFS HASH:</strong>
+              <div style={{
+                marginTop: 'var(--spacing-xs)',
+                fontFamily: 'Consolas, Monaco, Courier New, monospace',
+                fontSize: '0.875rem',
+                color: 'rgba(255, 255, 255, 0.9)'
+              }}>
+                {it.cid}
+              </div>
+            </div>
           ) : (
-            <button style={{ marginTop: 8 }} onClick={() => onReveal(i)}>Reveal CID</button>
+            <button
+              style={{
+                marginTop: 'var(--spacing-md)',
+                background: 'var(--gradient-accent)',
+                minWidth: '140px'
+              }}
+              onClick={() => onReveal(i)}
+            >
+              🔓 Reveal Ipfs Hash
+            </button>
           )}
         </div>
       ))}

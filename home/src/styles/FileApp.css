@@ -1,64 +1,264 @@
 .file-app {
   min-height: 100vh;
-  background-color: #f9fafb;
+  position: relative;
 }
 
 .main-content {
-  max-width: 56rem;
+  max-width: 64rem;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: var(--spacing-2xl) var(--spacing-md);
+  position: relative;
+  z-index: 1;
 }
 
 .connect-wallet-container {
   text-align: center;
-  padding: 3rem 0;
+  padding: var(--spacing-2xl) 0;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin: var(--spacing-xl) 0;
+  box-shadow: var(--shadow-xl);
 }
 
 .connect-wallet-title {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 700;
-  color: #111827;
-  margin-bottom: 1rem;
+  color: var(--text-inverse);
+  margin-bottom: var(--spacing-lg);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .connect-wallet-description {
-  color: #4b5563;
-  margin-bottom: 2rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: var(--spacing-xl);
+  font-size: 1.1rem;
 }
 
 .tab-navigation {
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-2xl);
+  display: flex;
+  justify-content: center;
 }
 
 .tab-nav {
   display: flex;
-  gap: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xs);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: var(--shadow-lg);
 }
 
 .tab-button {
-  padding: 0.5rem 0.25rem;
-  border-bottom: 2px solid transparent;
-  font-weight: 500;
-  font-size: 0.875rem;
-  background: none;
-  border-top: none;
-  border-left: none;
-  border-right: none;
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  font-size: 1rem;
+  background: transparent;
+  border: none;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.7);
+  min-width: 140px;
+}
+
+.tab-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--gradient-primary);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
 }
 
 .tab-button.active {
-  border-bottom-color: #3b82f6;
-  color: #2563eb;
+  color: var(--text-inverse);
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
-.tab-button.inactive {
-  color: #6b7280;
+.tab-button.active::before {
+  opacity: 0.8;
 }
 
 .tab-button.inactive:hover {
-  color: #374151;
-  border-bottom-color: #d1d5db;
+  color: var(--text-inverse);
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
 }
 
+/* Card styles */
+.card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-2xl);
+  margin: var(--spacing-xl) 0;
+  box-shadow: var(--shadow-xl);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  pointer-events: none;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Form elements */
+.card label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-inverse);
+  margin-bottom: var(--spacing-sm);
+  font-size: 1rem;
+}
+
+.card input[type="file"] {
+  width: 100%;
+  padding: var(--spacing-md);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-inverse);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.card input[type="file"]:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Button styles */
+.card button {
+  background: var(--gradient-primary);
+  color: var(--text-inverse);
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.card button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+}
+
+.card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.card button:active {
+  transform: translateY(0);
+}
+
+/* Status and info text */
+.card div[style*="fontSize: 12"] {
+  font-size: 0.875rem !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  background: rgba(0, 0, 0, 0.2);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+.card div[style*="color: #a00"] {
+  color: #ff6b6b !important;
+  background: rgba(255, 107, 107, 0.1) !important;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+/* File list items */
+.card div[style*="textAlign: left"] {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: var(--spacing-md);
+  transition: all 0.3s ease;
+}
+
+.card div[style*="textAlign: left"]:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: translateX(8px);
+}
+
+.card div[style*="textAlign: left"] strong {
+  color: var(--text-inverse);
+  font-size: 1.1rem;
+  display: block;
+  margin-bottom: var(--spacing-xs);
+}
+
+/* Loading and empty states */
+div:contains("Loading..."),
+div:contains("No files yet"),
+div:contains("Please connect wallet") {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-inverse);
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: var(--spacing-xl) 0;
+}
+
+/* Responsive design */
+@media (min-width: 640px) {
+  .main-content {
+    padding: var(--spacing-2xl);
+  }
+
+  .tab-button {
+    min-width: 160px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .main-content {
+    padding: var(--spacing-2xl) var(--spacing-xl);
+  }
+
+  .card {
+    padding: var(--spacing-2xl) var(--spacing-2xl);
+  }
+}
